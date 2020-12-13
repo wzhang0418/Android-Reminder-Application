@@ -1,0 +1,13 @@
+<resources>
+
+    <string name="app_name">Reminder Application</string>
+
+    <string-array name="area_array">
+        <item>BTM</item>
+        <item>Shivaji Nagar</item>
+        <item>HSR</item>
+    </string-array>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+</resources>
