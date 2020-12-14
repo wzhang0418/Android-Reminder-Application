@@ -1,4 +1,4 @@
-package com.apolis.wenzhao.reminderapplication
+package com.apolis.wenzhao.reminderapplication.ui
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -14,17 +14,15 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.provider.Settings
-import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import com.apolis.wenzhao.reminderapplication.BuildConfig
+import com.apolis.wenzhao.reminderapplication.R
 import com.apolis.wenzhao.reminderapplication.model.DataClass
-import com.google.android.gms.common.api.GoogleApiClient
-import com.google.android.gms.common.api.GoogleApiClient.Builder
 import com.google.android.gms.location.*
 import com.google.firebase.database.FirebaseDatabase
-import java.text.SimpleDateFormat
 import java.util.*
 
 class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, View.OnClickListener {
@@ -45,19 +43,18 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Vi
     private lateinit var buttonEditJummah: Button
 
     //Variables for input value
-    lateinit var selectedArea: String
-    lateinit var currentLatitude: String
-    lateinit var currentLongitude: String
+    private lateinit var selectedArea: String
+    private lateinit var currentLatitude: String
+    private lateinit var currentLongitude: String
 
     //Google Fused Location API
-    private var mFusedLocationProviderClient: FusedLocationProviderClient? = null
-    private lateinit var mLastLocation: Location
+    private lateinit var mFusedLocationProviderClient: FusedLocationProviderClient
     private lateinit var mLocationRequest: LocationRequest
 
     //Constants
     companion object {
-        private const val INTERVAL: Long = 2000
-        private const val FASTEST_INTERVAL: Long = 1000
+        private const val INTERVAL: Long = 10*1000
+        private const val FASTEST_INTERVAL: Long = 10*1000
         private const val REQUEST_PERMISSION_LOCATION = 10
     }
 
@@ -66,6 +63,9 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Vi
     private val calendar: Calendar = Calendar.getInstance()
     private val mHour = calendar.get(Calendar.HOUR_OF_DAY)
     private val mMinute = calendar.get(Calendar.MINUTE)
+
+    //Firebase Real-time Database
+    private val databaseReference = FirebaseDatabase.getInstance().getReference("table")
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,14 +76,14 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Vi
 
         setUpSpinner()
 
-        setUpLocationRequest()
-
+        checkGPSProviderEnabled()
     }
 
     override fun onDestroy() {
         super.onDestroy()
         stopLocationUpdates()
     }
+
 
     private fun setUpButtonClickListener() {
         buttonEditFajar = findViewById(R.id.button_edit_fajar)
@@ -105,11 +105,12 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Vi
         buttonSubmit.setOnClickListener(this)
     }
 
+
     private fun setUpSpinner() {
-        spinner = findViewById<Spinner>(R.id.spinner_area)
+        spinner = findViewById(R.id.spinner_area)
         ArrayAdapter.createFromResource(
             this,
-            R.array.area_array,
+                R.array.area_array,
             android.R.layout.simple_spinner_item
         ).also { adapter ->
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
@@ -120,16 +121,12 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Vi
 
     override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
         selectedArea = parent!!.getItemAtPosition(position).toString()
-
-        Toast.makeText(parent.context, "Selected: $selectedArea", Toast.LENGTH_LONG).show()
     }
 
-    override fun onNothingSelected(parent: AdapterView<*>?) {
-        Toast.makeText(parent?.context, "Please Select An Area", Toast.LENGTH_LONG).show()
-    }
+    override fun onNothingSelected(parent: AdapterView<*>?) {}
 
-    private fun setUpLocationRequest() {
-        mLocationRequest = LocationRequest()
+
+    private fun checkGPSProviderEnabled() {
         val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             buildAlertMessageNoGps()
@@ -140,13 +137,12 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Vi
         val builder = AlertDialog.Builder(this)
         builder.setMessage("Your GPS seems to be disabled, do you want to enable it?")
             .setCancelable(false)
-            .setPositiveButton("Yes") { dialog, id ->
-                startActivityForResult(
-                    Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-                    , 11
-                )
+            .setPositiveButton("Yes")
+            { dialog, id ->
+                startActivityForResult(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS), 11)
             }
-            .setNegativeButton("No") { dialog, id ->
+            .setNegativeButton("No")
+            { dialog, id ->
                 dialog.cancel()
                 finish()
             }
@@ -154,66 +150,10 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Vi
         alert.show()
     }
 
-    private fun startLocationUpdates() {
-        // Create the location request to start receiving updates
-
-        mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        mLocationRequest.interval = Companion.INTERVAL
-        mLocationRequest.fastestInterval = FASTEST_INTERVAL
-
-        // Create LocationSettingsRequest object using location request
-        val builder = LocationSettingsRequest.Builder()
-        builder.addLocationRequest(mLocationRequest)
-        val locationSettingsRequest = builder.build()
-
-        val settingsClient = LocationServices.getSettingsClient(this)
-        settingsClient.checkLocationSettings(locationSettingsRequest)
-
-        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
-        // new Google API SDK v11 uses getFusedLocationProviderClient(this)
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-
-            return
-        }
-        mFusedLocationProviderClient!!.requestLocationUpdates(
-            mLocationRequest, mLocationCallback,
-            Looper.myLooper()
-        )
-    }
-
-    private val mLocationCallback = object : LocationCallback() {
-        override fun onLocationResult(locationResult: LocationResult) {
-            // do work here
-            locationResult.lastLocation
-            onLocationChanged(locationResult.lastLocation)
-        }
-    }
-
-    fun onLocationChanged(location: Location) {
-        // New location has now been determined
-        mLastLocation = location
-
-        // You can now create a LatLng Object for use with maps
-        currentLatitude = mLastLocation.latitude.toString()
-        currentLongitude = mLastLocation.longitude.toString()
-        //Toast.makeText(this, "lat: $currentLatitude; lng: $currentLongitude", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun stopLocationUpdates() {
-        mFusedLocationProviderClient!!.removeLocationUpdates(mLocationCallback)
-    }
-
     override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
+            requestCode: Int,
+            permissions: Array<out String>,
+            grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_PERMISSION_LOCATION) {
@@ -235,9 +175,55 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Vi
         Toast.makeText(this@MainActivity, "Go to Permissions and grant permissions.", Toast.LENGTH_LONG).show()
     }
 
+    private fun startLocationUpdates() {
+        // Create the location request to start receiving updates
+        mLocationRequest = LocationRequest()
+        mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        mLocationRequest.interval = INTERVAL
+        mLocationRequest.fastestInterval = FASTEST_INTERVAL
+
+        // Create LocationSettingsRequest object using location request
+        val builder = LocationSettingsRequest.Builder()
+        builder.addLocationRequest(mLocationRequest)
+        val locationSettingsRequest = builder.build()
+
+        val settingsClient = LocationServices.getSettingsClient(this)
+        settingsClient.checkLocationSettings(locationSettingsRequest)
+
+        // new Google API SDK v11 uses getFusedLocationProviderClient(this)
+        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
+
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+        mFusedLocationProviderClient.requestLocationUpdates(
+            mLocationRequest, mLocationCallback,
+            Looper.myLooper()
+        )
+    }
+
+    private val mLocationCallback = object : LocationCallback() {
+        override fun onLocationResult(locationResult: LocationResult) {
+            // You can now create a LatLng Object for use with maps
+            currentLatitude = locationResult.lastLocation.latitude.toString()
+            currentLongitude = locationResult.lastLocation.longitude.toString()
+            Toast.makeText(this@MainActivity, "Your current location has been updated!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun stopLocationUpdates() {
+        mFusedLocationProviderClient.removeLocationUpdates(mLocationCallback)
+    }
+
     private fun checkPermissionForLocation(context: Context): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-
             if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
                 PackageManager.PERMISSION_GRANTED
             ) {
@@ -245,19 +231,20 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Vi
             } else {
                 // Show the permission request
                 ActivityCompat.requestPermissions(
-                    this, arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
-                    REQUEST_PERMISSION_LOCATION
+                        this,
+                        arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                        REQUEST_PERMISSION_LOCATION
                 )
                 false
             }
         } else {
             true
         }
-
     }
 
-    @SuppressLint("SetTextI18n")
-    private fun setUpTimePickerDialog(button: Button, ) {
+
+    @SuppressLint("SetTextI18n", "ResourceAsColor")
+    private fun setUpTimePickerDialog(button: Button) { //Can determine the pickerDialog for which button
         timePickerDialog = TimePickerDialog(
             this,
             { view, hourOfDay, minute ->
@@ -268,11 +255,35 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Vi
                 if(minute<10) m = "0$m"
                 //set text to be selected time
                 button.text = "$h:$m"
-
+                button.setBackgroundColor(R.color.purple_custom)
             },
             mHour, mMinute, true
         )
         timePickerDialog.show()
+    }
+
+    private fun assignValuesToDataClassObject() {
+        editTextName = findViewById(R.id.edit_text_name)
+        dataClass.name = editTextName.text.toString()
+        dataClass.area = selectedArea
+        dataClass.latitude = currentLatitude
+        dataClass.longitude = currentLongitude
+        dataClass.time1 = if(buttonEditFajar.text == "Edit") "null" else buttonEditFajar.text.toString()
+        dataClass.time2 = if(buttonEditAsar.text == "Edit") "null" else buttonEditAsar.text.toString()
+        dataClass.time3 = if(buttonEditIsha.text == "Edit") "null" else buttonEditIsha.text.toString()
+        dataClass.time4 = if(buttonEditZohar.text == "Edit") "null" else buttonEditZohar.text.toString()
+        dataClass.time5 = if(buttonEditMagrib.text == "Edit") "null" else buttonEditMagrib.text.toString()
+        dataClass.time6 = if(buttonEditJummah.text == "Edit") "null" else buttonEditJummah.text.toString()
+    }
+
+    private fun uploadDataToDataBase() {
+        databaseReference.child(dataClass.name!!).setValue(dataClass)
+        Toast.makeText(this, "Your data has been stored in the database!", Toast.LENGTH_LONG).show()
+        goToConfirmationActivity()
+    }
+
+    private fun goToConfirmationActivity() {
+        startActivity(Intent(this,ConfirmationActivity::class.java))
     }
 
     //Handle all click events
@@ -297,35 +308,14 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Vi
                 setUpTimePickerDialog(buttonEditJummah)
             }
             buttonSetLocation -> {
-                Log.d("MYTAG", "Button Set Location Clicked")
                 if (checkPermissionForLocation(this))
                     startLocationUpdates()
             }
             buttonSubmit -> {
-                Log.d("MYTAG", "Button Submit clicked ")
                 assignValuesToDataClassObject()
                 uploadDataToDataBase()
             }
         }
-    }
-
-    private fun assignValuesToDataClassObject() {
-        editTextName = findViewById(R.id.edit_text_name)
-        dataClass.name = editTextName.text.toString()
-        dataClass.area = selectedArea
-        dataClass.latitude = currentLatitude
-        dataClass.longitude = currentLongitude
-        dataClass.time1 = if(buttonEditFajar.text == "Edit") "null" else buttonEditFajar.text.toString()
-        dataClass.time2 = if(buttonEditAsar.text == "Edit") "null" else buttonEditAsar.text.toString()
-        dataClass.time3 = if(buttonEditIsha.text == "Edit") "null" else buttonEditIsha.text.toString()
-        dataClass.time4 = if(buttonEditZohar.text == "Edit") "null" else buttonEditZohar.text.toString()
-        dataClass.time5 = if(buttonEditMagrib.text == "Edit") "null" else buttonEditMagrib.text.toString()
-        dataClass.time6 = if(buttonEditJummah.text == "Edit") "null" else buttonEditJummah.text.toString()
-    }
-
-    private fun uploadDataToDataBase() {
-        var databaseReference = FirebaseDatabase.getInstance().getReference("table")
-        databaseReference.child(dataClass.name!!).setValue(dataClass)
     }
 }
 
