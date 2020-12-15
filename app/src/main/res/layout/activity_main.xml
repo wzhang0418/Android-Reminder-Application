@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
+    android:background="@drawable/masjid"
     tools:context=".ui.MainActivity">
 
     <EditText
@@ -14,18 +15,20 @@
         android:hint="Enter the name of Masjid"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="16dp"/>
 
     <TextView
         android:id="@+id/text_view_choose_area"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Choose Area"
+        android:textSize="16dp"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/edit_text_name"
-        android:layout_marginTop="48dp"/>
+        android:layout_marginTop="32dp"/>
 
     <Spinner
         android:id="@+id/spinner_area"
@@ -40,23 +43,45 @@
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/button_set_location"
         android:layout_width="200dp"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:text="Set Location"
-        android:background="#77B9C1"
+        android:background="@drawable/round_corner_button_yellow"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/spinner_area"
-        android:layout_marginTop="48dp" />
+        android:layout_marginTop="32dp"/>
+
+    <TextView
+        android:id="@+id/text_view_your_current_location_is"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Your current location is: "
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button_set_location"
+        android:layout_marginTop="6dp" />
+
+    <TextView
+        android:id="@+id/text_view_location"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Lat: Long:"
+        android:textStyle="bold"
+        android:textSize="16dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/text_view_your_current_location_is" />
 
     <TextView
         android:id="@+id/text_view_set_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="48dp"
+        android:layout_marginTop="72dp"
         android:text="Set Time"
+        android:textColor="#424242"
         android:textSize="24dp"
         android:textStyle="bold"
-        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_bias="0.05"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button_set_location" />
@@ -66,21 +91,22 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="FAJAR"
-        android:textColor="#62757B"
+        android:textSize="16dp"
+        android:textColor="#424242"
         android:textStyle="bold"
         app:layout_constraintHorizontal_bias="0.05"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/text_view_set_time"
-        android:layout_marginTop="48dp"/>
+        android:layout_marginTop="32dp"/>
 
     <TextView
         android:id="@+id/text_view_asar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="ASAR"
-        android:textSize="16dp"
-        android:textColor="#A5AAAB"
+        android:textSize="18dp"
+        android:textColor="#424242"
         android:textStyle="bold"
         app:layout_constraintHorizontal_bias="0.05"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -93,8 +119,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="ISHA"
-        android:textSize="16dp"
-        android:textColor="#D2B6E5"
+        android:textSize="18dp"
+        android:textColor="#424242"
         android:textStyle="bold"
         app:layout_constraintHorizontal_bias="0.05"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -105,8 +131,9 @@
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/button_edit_fajar"
         android:layout_width="80dp"
-        android:layout_height="wrap_content"
-        android:text="Edit"
+        android:layout_height="40dp"
+        android:text="@string/set_time"
+        android:background="@drawable/round_corner_button_grey"
         app:layout_constraintHorizontal_bias="0.25"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -116,8 +143,9 @@
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/button_edit_asar"
         android:layout_width="80dp"
-        android:layout_height="wrap_content"
-        android:text="Edit"
+        android:layout_height="40dp"
+        android:text="@string/set_time"
+        android:background="@drawable/round_corner_button_grey"
         app:layout_constraintHorizontal_bias="0.25"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -127,8 +155,9 @@
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/button_edit_isha"
         android:layout_width="80dp"
-        android:layout_height="wrap_content"
-        android:text="Edit"
+        android:layout_height="40dp"
+        android:text="@string/set_time"
+        android:background="@drawable/round_corner_button_grey"
         app:layout_constraintHorizontal_bias="0.25"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -140,20 +169,22 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="ZOHAR"
-        android:textColor="#D2A295"
+        android:textSize="16dp"
+        android:textColor="#424242"
         android:textStyle="bold"
         app:layout_constraintHorizontal_bias="0.60"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/text_view_set_time"
-        android:layout_marginTop="48dp"/>
+        android:layout_marginTop="32dp"/>
 
     <TextView
         android:id="@+id/text_view_magrib"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="MAGRIB"
-        android:textColor="#7A8A8A"
+        android:textSize="16dp"
+        android:textColor="#424242"
         android:textStyle="bold"
         app:layout_constraintHorizontal_bias="0.60"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -166,7 +197,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="JUMMAH"
-        android:textColor="#AA9387"
+        android:textSize="16dp"
+        android:textColor="#424242"
         android:textStyle="bold"
         app:layout_constraintHorizontal_bias="0.60"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -177,8 +209,9 @@
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/button_edit_zohar"
         android:layout_width="80dp"
-        android:layout_height="wrap_content"
-        android:text="Edit"
+        android:layout_height="40dp"
+        android:text="@string/set_time"
+        android:background="@drawable/round_corner_button_grey"
         app:layout_constraintHorizontal_bias="0.90"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -188,8 +221,9 @@
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/button_edit_magrib"
         android:layout_width="80dp"
-        android:layout_height="wrap_content"
-        android:text="Edit"
+        android:layout_height="40dp"
+        android:text="@string/set_time"
+        android:background="@drawable/round_corner_button_grey"
         app:layout_constraintHorizontal_bias="0.90"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -199,8 +233,9 @@
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/button_edit_jummah"
         android:layout_width="80dp"
-        android:layout_height="wrap_content"
-        android:text="Edit"
+        android:layout_height="40dp"
+        android:text="@string/set_time"
+        android:background="@drawable/round_corner_button_grey"
         app:layout_constraintHorizontal_bias="0.90"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -211,8 +246,8 @@
         android:id="@+id/button_submit"
         android:layout_width="match_parent"
         android:layout_height="60dp"
+        android:background="@drawable/round_corner_button_blue"
         android:text="Submit"
-        android:background="#D2A295"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"

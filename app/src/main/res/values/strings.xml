@@ -1,6 +1,7 @@
 <resources>
 
     <string name="app_name">Reminder Application</string>
+    <string name="set_time">SET TIME</string>
 
     <string-array name="area_array">
         <item>BTM</item>

@@ -10,10 +10,12 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
 import android.net.Uri
+import android.opengl.Visibility
 import android.os.Build
 import android.os.Bundle
 import android.os.Looper
 import android.provider.Settings
+import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -31,21 +33,23 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Vi
     private val dataClass: DataClass = DataClass()
 
     //UI Components
-    private lateinit var editTextName: EditText
-    private lateinit var spinner: Spinner
-    private lateinit var buttonSubmit: Button
-    private lateinit var buttonSetLocation: Button
-    private lateinit var buttonEditFajar: Button
-    private lateinit var buttonEditAsar: Button
-    private lateinit var buttonEditIsha: Button
-    private lateinit var buttonEditZohar: Button
-    private lateinit var buttonEditMagrib: Button
-    private lateinit var buttonEditJummah: Button
+    private var editTextName: EditText? = null
+    private var spinner: Spinner? = null
+    private var textViewYourCurrentLocationIs: TextView? = null
+    private var textViewLocation: TextView? = null
+    private var buttonSubmit: Button? = null
+    private var buttonSetLocation: Button? = null
+    private var buttonEditFajar: Button? = null
+    private var buttonEditAsar: Button? = null
+    private var buttonEditIsha: Button? = null
+    private var buttonEditZohar: Button? = null
+    private var buttonEditMagrib: Button? = null
+    private var buttonEditJummah: Button? = null
 
     //Variables for input value
-    private lateinit var selectedArea: String
-    private lateinit var currentLatitude: String
-    private lateinit var currentLongitude: String
+    private var selectedArea: String? = null
+    private var currentLatitude: String? = null
+    private var currentLongitude: String? = null
 
     //Google Fused Location API
     private lateinit var mFusedLocationProviderClient: FusedLocationProviderClient
@@ -72,6 +76,8 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Vi
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        setUpViewVisibility()
+
         setUpButtonClickListener()
 
         setUpSpinner()
@@ -84,6 +90,12 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Vi
         stopLocationUpdates()
     }
 
+    private fun setUpViewVisibility() {
+        textViewYourCurrentLocationIs = findViewById(R.id.text_view_your_current_location_is)
+        textViewLocation = findViewById(R.id.text_view_location)
+        textViewYourCurrentLocationIs!!.visibility = View.GONE
+        textViewLocation!!.visibility = View.GONE
+    }
 
     private fun setUpButtonClickListener() {
         buttonEditFajar = findViewById(R.id.button_edit_fajar)
@@ -95,14 +107,14 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Vi
         buttonSetLocation = findViewById(R.id.button_set_location)
         buttonSubmit = findViewById(R.id.button_submit)
 
-        buttonEditFajar.setOnClickListener(this)
-        buttonEditAsar.setOnClickListener(this)
-        buttonEditIsha.setOnClickListener(this)
-        buttonEditZohar.setOnClickListener(this)
-        buttonEditMagrib.setOnClickListener(this)
-        buttonEditJummah.setOnClickListener(this)
-        buttonSetLocation.setOnClickListener(this)
-        buttonSubmit.setOnClickListener(this)
+        buttonEditFajar!!.setOnClickListener(this)
+        buttonEditAsar!!.setOnClickListener(this)
+        buttonEditIsha!!.setOnClickListener(this)
+        buttonEditZohar!!.setOnClickListener(this)
+        buttonEditMagrib!!.setOnClickListener(this)
+        buttonEditJummah!!.setOnClickListener(this)
+        buttonSetLocation!!.setOnClickListener(this)
+        buttonSubmit!!.setOnClickListener(this)
     }
 
 
@@ -114,9 +126,9 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Vi
             android.R.layout.simple_spinner_item
         ).also { adapter ->
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-            spinner.adapter = adapter
+            spinner!!.adapter = adapter
         }
-        spinner.onItemSelectedListener = this
+        spinner!!.onItemSelectedListener = this
     }
 
     override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
@@ -210,10 +222,14 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Vi
     }
 
     private val mLocationCallback = object : LocationCallback() {
+        @SuppressLint("SetTextI18n")
         override fun onLocationResult(locationResult: LocationResult) {
             // You can now create a LatLng Object for use with maps
             currentLatitude = locationResult.lastLocation.latitude.toString()
             currentLongitude = locationResult.lastLocation.longitude.toString()
+            textViewYourCurrentLocationIs!!.text = "Your current location is:"
+            textViewLocation!!.text = "Longitude: $currentLongitude, Latitude: $currentLatitude"
+            textViewLocation!!.visibility = View.VISIBLE
             Toast.makeText(this@MainActivity, "Your current location has been updated!", Toast.LENGTH_SHORT).show()
         }
     }
@@ -255,7 +271,7 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Vi
                 if(minute<10) m = "0$m"
                 //set text to be selected time
                 button.text = "$h:$m"
-                button.setBackgroundColor(R.color.purple_custom)
+                button.setBackgroundResource(R.drawable.round_corner_button_pink)
             },
             mHour, mMinute, true
         )
@@ -264,16 +280,16 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Vi
 
     private fun assignValuesToDataClassObject() {
         editTextName = findViewById(R.id.edit_text_name)
-        dataClass.name = editTextName.text.toString()
+        dataClass.name = editTextName?.text.toString()
         dataClass.area = selectedArea
         dataClass.latitude = currentLatitude
         dataClass.longitude = currentLongitude
-        dataClass.time1 = if(buttonEditFajar.text == "Edit") "null" else buttonEditFajar.text.toString()
-        dataClass.time2 = if(buttonEditAsar.text == "Edit") "null" else buttonEditAsar.text.toString()
-        dataClass.time3 = if(buttonEditIsha.text == "Edit") "null" else buttonEditIsha.text.toString()
-        dataClass.time4 = if(buttonEditZohar.text == "Edit") "null" else buttonEditZohar.text.toString()
-        dataClass.time5 = if(buttonEditMagrib.text == "Edit") "null" else buttonEditMagrib.text.toString()
-        dataClass.time6 = if(buttonEditJummah.text == "Edit") "null" else buttonEditJummah.text.toString()
+        dataClass.fajar = if(buttonEditFajar!!.text == "SET TIME") "null" else buttonEditFajar!!.text.toString()
+        dataClass.asar = if(buttonEditAsar!!.text == "SET TIME") "null" else buttonEditAsar!!.text.toString()
+        dataClass.isha = if(buttonEditIsha!!.text == "SET TIME") "null" else buttonEditIsha!!.text.toString()
+        dataClass.zohar = if(buttonEditZohar!!.text == "SET TIME") "null" else buttonEditZohar!!.text.toString()
+        dataClass.magrib = if(buttonEditMagrib!!.text == "SET TIME") "null" else buttonEditMagrib!!.text.toString()
+        dataClass.jummah = if(buttonEditJummah!!.text == "SET TIME") "null" else buttonEditJummah!!.text.toString()
     }
 
     private fun uploadDataToDataBase() {
@@ -287,33 +303,40 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener, Vi
     }
 
     //Handle all click events
+    @SuppressLint("SetTextI18n")
     override fun onClick(view: View?) {
         when(view) {
             buttonEditFajar -> {
-                setUpTimePickerDialog(buttonEditFajar)
+                setUpTimePickerDialog(buttonEditFajar!!)
             }
             buttonEditAsar -> {
-                setUpTimePickerDialog(buttonEditAsar)
+                setUpTimePickerDialog(buttonEditAsar!!)
             }
             buttonEditIsha -> {
-                setUpTimePickerDialog(buttonEditIsha)
+                setUpTimePickerDialog(buttonEditIsha!!)
             }
             buttonEditZohar -> {
-                setUpTimePickerDialog(buttonEditZohar)
+                setUpTimePickerDialog(buttonEditZohar!!)
             }
             buttonEditMagrib -> {
-                setUpTimePickerDialog(buttonEditMagrib)
+                setUpTimePickerDialog(buttonEditMagrib!!)
             }
             buttonEditJummah -> {
-                setUpTimePickerDialog(buttonEditJummah)
+                setUpTimePickerDialog(buttonEditJummah!!)
             }
             buttonSetLocation -> {
-                if (checkPermissionForLocation(this))
+                if (checkPermissionForLocation(this)) {
+                    textViewYourCurrentLocationIs!!.text = "Navigating to your current location..."
+                    textViewYourCurrentLocationIs!!.visibility = View.VISIBLE
                     startLocationUpdates()
+                }
             }
             buttonSubmit -> {
                 assignValuesToDataClassObject()
-                uploadDataToDataBase()
+                if (editTextName!!.text == null || currentLatitude == null || currentLongitude == null)
+                    Toast.makeText(this, "Please Complete All the Information", Toast.LENGTH_SHORT).show()
+                else
+                    uploadDataToDataBase()
             }
         }
     }
